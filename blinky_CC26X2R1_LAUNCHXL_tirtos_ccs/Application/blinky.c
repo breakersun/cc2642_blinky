@@ -1,6 +1,6 @@
 /******************************************************************************
 
-   @file  project_zero.c
+   @file  blinky.c
 
    @brief This file contains the Project Zero sample application for use
         with the CC2650 Bluetooth Low Energy Protocol Stack.
@@ -89,7 +89,7 @@
 /* Application specific includes */
 #include <ti_drivers_config.h>
 
-#include <project_zero.h>
+#include <blinky.h>
 #include "ti_ble_config.h"
 #include <util.h>
 

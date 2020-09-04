@@ -67,7 +67,7 @@
 #include <icall.h>
 #include "hal_assert.h"
 #include "bcomdef.h"
-#include "project_zero.h"
+#include "blinky.h"
 
 #ifndef USE_DEFAULT_USER_CFG
 #include "ble_user_config.h"
