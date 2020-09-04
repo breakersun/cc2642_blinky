@@ -16,6 +16,6 @@
 #define LBS_UUID_BUTTON_CHAR 0x1524
 #define LBS_UUID_LED_CHAR    0x1525
 
-
+extern bStatus_t LedButtonService_AddService(uint8_t rspTaskId);
 
 #endif /* PROFILES_LED_BUTTON_SERVICE_H_ */

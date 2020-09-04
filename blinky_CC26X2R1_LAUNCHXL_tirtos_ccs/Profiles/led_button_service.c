@@ -94,3 +94,49 @@ static gattAttribute_t LB_ServiceAttrTbl[] =
         &LEDVal
     },
 };
+
+static bStatus_t LB_Service_ReadAttrCB(uint16_t connHandle,
+                                        gattAttribute_t *pAttr,
+                                        uint8_t *pValue,
+                                        uint16_t *pLen,
+                                        uint16_t offset,
+                                        uint16_t maxLen,
+                                        uint8_t method)
+{
+
+}
+
+static bStatus_t LB_Service_WriteAttrCB(uint16_t connHandle,
+                                         gattAttribute_t *pAttr,
+                                         uint8_t *pValue,
+                                         uint16_t len,
+                                         uint16_t offset,
+                                         uint8_t method)
+{
+
+}
+
+CONST gattServiceCBs_t LB_ServiceCBs =
+{
+ LB_Service_ReadAttrCB, // Read callback function pointer
+ LB_Service_WriteAttrCB, // Write callback function pointer
+ NULL                     // Authorization callback function pointer
+};
+
+extern bStatus_t LedButtonService_AddService(uint8_t rspTaskId)
+{
+    uint8_t status;
+
+    // Register GATT attribute list and CBs with GATT Server App
+    status = GATTServApp_RegisterService(LB_ServiceAttrTbl,
+                                         GATT_NUM_ATTRS(LB_ServiceAttrTbl),
+                                         GATT_MAX_ENCRYPT_KEY_SIZE,
+                                         &LB_ServiceCBs);
+    Log_info2("Registered service, %d attributes, status 0x%02x",
+              GATT_NUM_ATTRS(LB_ServiceAttrTbl), status);
+    return(status);
+}
+
+
+
+
