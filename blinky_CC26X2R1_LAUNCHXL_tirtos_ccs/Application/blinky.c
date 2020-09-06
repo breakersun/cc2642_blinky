@@ -673,6 +673,9 @@ static void ProjectZero_init(void)
     DataService_SetParameter(DS_STRING_ID, sizeof(initString), initString);
     DataService_SetParameter(DS_STREAM_ID, DS_STREAM_LEN, initVal);
 
+    LedButtonService_SetParameter(LBS_LED_ID, LBS_LED_LEN, initVal);
+    LedButtonService_SetParameter(LBS_BUTTON_ID, LBS_BUTTON_LEN, initVal);
+
     // Start Bond Manager and register callback
     VOID GAPBondMgr_Register(&ProjectZero_BondMgrCBs);
 

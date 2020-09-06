@@ -16,10 +16,10 @@
 #define LBS_UUID_BUTTON_CHAR 0x1524
 #define LBS_UUID_LED_CHAR    0x1525
 
-#define BUTTON_ID           0x01
-#define BS_BUTTON_LEN                1
-#define BS_BUTTON_LEN_MIN            1
-#define LED_ID              0x02
+#define LBS_BUTTON_ID           0x01
+#define LBS_BUTTON_LEN                1
+#define LBS_BUTTON_LEN_MIN            1
+#define LBS_LED_ID              0x02
 #define LBS_LED_LEN                1
 #define LBS_LED_LEN_MIN            1
 
@@ -34,5 +34,6 @@ typedef struct
 } LedButtonServiceCBs_t;
 
 extern bStatus_t LedButtonService_AddService(uint8_t rspTaskId);
+extern bStatus_t LedButtonService_SetParameter(uint8_t param, uint16_t len, void *value);
 
 #endif /* PROFILES_LED_BUTTON_SERVICE_H_ */

@@ -31,9 +31,9 @@ CONST uint8_t buttonCharUUID[ATT_UUID_SIZE] =
  LBS_UUID_BASE(LBS_UUID_BUTTON_CHAR)
 };
 
-static uint8 BUTTONVal[BS_BUTTON_LEN] = {0};
+static uint8 BUTTONVal[LBS_BUTTON_LEN] = {0};
 
-static uint16_t lbs_ButtonValLen = BS_BUTTON_LEN_MIN;
+static uint16_t lbs_ButtonValLen = LBS_BUTTON_LEN_MIN;
 
 // Characteristic "BUTTON" Client Characteristic Configuration Descriptor
 static gattCharCfg_t *lbs_BUTTONConfig;
@@ -100,6 +100,86 @@ static gattAttribute_t LB_ServiceAttrTbl[] =
 };
 
 static LedButtonServiceCBs_t *pAppCBs = NULL;
+static uint8_t lbs_icall_rsp_task_id = INVALID_TASK_ID;
+
+static bStatus_t LB_Service_ReadAttrCB(uint16_t connHandle,
+                                        gattAttribute_t *pAttr,
+                                        uint8_t *pValue,
+                                        uint16_t *pLen,
+                                        uint16_t offset,
+                                        uint16_t maxLen,
+                                        uint8_t method);
+
+bStatus_t LedButtonService_SetParameter(uint8_t param, uint16_t len, void *value)
+{
+    bStatus_t ret = SUCCESS;
+    uint8_t  *pAttrVal;
+    uint16_t *pValLen;
+    uint16_t valMinLen;
+    uint16_t valMaxLen;
+    uint8_t sendNotiInd = FALSE;
+    gattCharCfg_t *attrConfig;
+    uint8_t needAuth;
+
+    switch(param)
+    {
+    case LBS_LED_ID:
+        pAttrVal = LEDVal;
+        pValLen = &lbs_LEDValLen;
+        valMinLen = LBS_LED_LEN_MIN;
+        valMaxLen = LBS_LED_LEN;
+        Log_info2("SetParameter : %s len: %d", (uintptr_t)"LED", len);
+        break;
+
+    case LBS_BUTTON_ID:
+        pAttrVal = BUTTONVal;
+        pValLen = &lbs_ButtonValLen;
+        valMinLen = LBS_BUTTON_LEN_MIN;
+        valMaxLen = LBS_BUTTON_LEN;
+        sendNotiInd = TRUE;
+        attrConfig = lbs_BUTTONConfig;
+        needAuth = FALSE;  // Change if authenticated link is required for sending.
+        Log_info2("SetParameter : %s len: %d", (uintptr_t)"BUTTON", len);
+        break;
+
+    default:
+        Log_error1("SetParameter: Parameter #%d not valid.", param);
+        return(INVALIDPARAMETER);
+    }
+
+    // Check bounds, update value and send notification or indication if possible.
+    if(len <= valMaxLen && len >= valMinLen)
+    {
+        memcpy(pAttrVal, value, len);
+        *pValLen = len; // Update length for read and get.
+
+        if(sendNotiInd)
+        {
+            Log_info2("Trying to send noti/ind: connHandle %x, %s",
+                      attrConfig[0].connHandle,
+                      (uintptr_t)((attrConfig[0].value ==
+                                   0) ? "\x1b[33mNoti/ind disabled\x1b[0m" :
+                                  (attrConfig[0].value ==
+                                   1) ? "Notification enabled" :
+                                  "Indication enabled"));
+            // Try to send notification.
+            GATTServApp_ProcessCharCfg(attrConfig, pAttrVal, needAuth,
+                                       LB_ServiceAttrTbl,
+                                       GATT_NUM_ATTRS(LB_ServiceAttrTbl),
+                                       lbs_icall_rsp_task_id,
+                                       LB_Service_ReadAttrCB);
+        }
+    }
+    else
+    {
+        Log_error3("Length outside bounds: Len: %d MinLen: %d MaxLen: %d.", len,
+                   valMinLen,
+                   valMaxLen);
+        ret = bleInvalidRange;
+    }
+
+    return(ret);
+}
 
 static uint8_t LedButton_Service_findCharParamId(gattAttribute_t *pAttr)
 {
@@ -112,12 +192,12 @@ static uint8_t LedButton_Service_findCharParamId(gattAttribute_t *pAttr)
     else if(ATT_UUID_SIZE == pAttr->type.len &&
             !memcmp(pAttr->type.uuid, buttonCharUUID, pAttr->type.len))
     {
-        return(BUTTON_ID);
+        return(LBS_BUTTON_ID);
     }
     else if(ATT_UUID_SIZE == pAttr->type.len &&
             !memcmp(pAttr->type.uuid, ledCharUUID, pAttr->type.len))
     {
-        return(LED_ID);
+        return(LBS_LED_ID);
     }
     else
     {
@@ -142,7 +222,7 @@ static bStatus_t LB_Service_ReadAttrCB(uint16_t connHandle,
     paramID = LedButton_Service_findCharParamId(pAttr);
     switch(paramID)
     {
-    case BUTTON_ID:
+    case LBS_BUTTON_ID:
         valueLen = lbs_ButtonValLen;
 
         Log_info4("ReadAttrCB : %s connHandle: %d offset: %d method: 0x%02x",
@@ -153,7 +233,7 @@ static bStatus_t LB_Service_ReadAttrCB(uint16_t connHandle,
         /* Other considerations for LED0 can be inserted here */
         break;
 
-    case LED_ID:
+    case LBS_LED_ID:
         valueLen = lbs_LEDValLen;
 
         Log_info4("ReadAttrCB : %s connHandle: %d offset: %d method: 0x%02x",
@@ -228,7 +308,7 @@ static bStatus_t LB_Service_WriteAttrCB(uint16_t connHandle,
     paramID = LedButton_Service_findCharParamId(pAttr);
     switch(paramID)
     {
-    case LED_ID:
+    case LBS_LED_ID:
         writeLenMin = LBS_LED_LEN_MIN;
         writeLenMax = LBS_LED_LEN;
         pValueLenVar = &lbs_LEDValLen;
