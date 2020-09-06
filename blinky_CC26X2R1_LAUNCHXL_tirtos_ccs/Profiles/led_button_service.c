@@ -201,6 +201,22 @@ bStatus_t LedButtonService_GetParameter(uint8_t param, uint16_t *len, void *valu
     return(ret);
 }
 
+bStatus_t LedButtonService_RegisterAppCBs(LedButtonServiceCBs_t *appCallbacks)
+{
+    if(appCallbacks)
+    {
+        pAppCBs = appCallbacks;
+        Log_info1("Registered callbacks to application. Struct %p",
+                  (uintptr_t)appCallbacks);
+        return(SUCCESS);
+    }
+    else
+    {
+        Log_warning0("Null pointer given for app callbacks.");
+        return(FAILURE);
+    }
+}
+
 static uint8_t LedButton_Service_findCharParamId(gattAttribute_t *pAttr)
 {
     // Is this a Client Characteristic Configuration Descriptor?
