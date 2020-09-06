@@ -16,6 +16,23 @@
 #define LBS_UUID_BUTTON_CHAR 0x1524
 #define LBS_UUID_LED_CHAR    0x1525
 
+#define BUTTON_ID           0x01
+#define BS_BUTTON_LEN                1
+#define BS_BUTTON_LEN_MIN            1
+#define LED_ID              0x02
+#define LBS_LED_LEN                1
+#define LBS_LED_LEN_MIN            1
+
+// Callback when a characteristic value has changed
+typedef void (*LedButtonServiceChange_t)(uint16_t connHandle, uint8_t paramID,
+                                   uint16_t len, uint8_t *pValue);
+
+typedef struct
+{
+    LedButtonServiceChange_t pfnChangeCb;          // Called when characteristic value changes
+    LedButtonServiceChange_t pfnCfgChangeCb;       // Called when characteristic CCCD changes
+} LedButtonServiceCBs_t;
+
 extern bStatus_t LedButtonService_AddService(uint8_t rspTaskId);
 
 #endif /* PROFILES_LED_BUTTON_SERVICE_H_ */
