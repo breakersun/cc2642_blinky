@@ -35,5 +35,6 @@ typedef struct
 
 extern bStatus_t LedButtonService_AddService(uint8_t rspTaskId);
 extern bStatus_t LedButtonService_SetParameter(uint8_t param, uint16_t len, void *value);
+extern bStatus_t LedButtonService_GetParameter(uint8_t param, uint16_t *len, void *value);
 
 #endif /* PROFILES_LED_BUTTON_SERVICE_H_ */

@@ -31,7 +31,7 @@ CONST uint8_t buttonCharUUID[ATT_UUID_SIZE] =
  LBS_UUID_BASE(LBS_UUID_BUTTON_CHAR)
 };
 
-static uint8 BUTTONVal[LBS_BUTTON_LEN] = {0};
+static uint8 lbs_BUTTONVal[LBS_BUTTON_LEN] = {0};
 
 static uint16_t lbs_ButtonValLen = LBS_BUTTON_LEN_MIN;
 
@@ -48,7 +48,7 @@ CONST uint8_t ledCharUUID[ATT_UUID_SIZE] =
  LBS_UUID_BASE(LBS_UUID_LED_CHAR)
 };
 
-static uint8 LEDVal[LBS_LED_LEN] = {0};
+static uint8 lbs_LEDVal[LBS_LED_LEN] = {0};
 
 static uint16_t lbs_LEDValLen = LBS_LED_LEN_MIN;
 
@@ -73,7 +73,7 @@ static gattAttribute_t LB_ServiceAttrTbl[] =
         { ATT_UUID_SIZE, buttonCharUUID },
         GATT_PERMIT_READ,
         0,
-        BUTTONVal
+        lbs_BUTTONVal
     },
     // Button CCCD
     {
@@ -95,7 +95,7 @@ static gattAttribute_t LB_ServiceAttrTbl[] =
         { ATT_UUID_SIZE, ledCharUUID },
         GATT_PERMIT_READ | GATT_PERMIT_WRITE | GATT_PERMIT_WRITE,
         0,
-        LEDVal
+        lbs_LEDVal
     },
 };
 
@@ -124,7 +124,7 @@ bStatus_t LedButtonService_SetParameter(uint8_t param, uint16_t len, void *value
     switch(param)
     {
     case LBS_LED_ID:
-        pAttrVal = LEDVal;
+        pAttrVal = lbs_LEDVal;
         pValLen = &lbs_LEDValLen;
         valMinLen = LBS_LED_LEN_MIN;
         valMaxLen = LBS_LED_LEN;
@@ -132,7 +132,7 @@ bStatus_t LedButtonService_SetParameter(uint8_t param, uint16_t len, void *value
         break;
 
     case LBS_BUTTON_ID:
-        pAttrVal = BUTTONVal;
+        pAttrVal = lbs_BUTTONVal;
         pValLen = &lbs_ButtonValLen;
         valMinLen = LBS_BUTTON_LEN_MIN;
         valMaxLen = LBS_BUTTON_LEN;
@@ -178,6 +178,26 @@ bStatus_t LedButtonService_SetParameter(uint8_t param, uint16_t len, void *value
         ret = bleInvalidRange;
     }
 
+    return(ret);
+}
+
+bStatus_t LedButtonService_GetParameter(uint8_t param, uint16_t *len, void *value)
+{
+    bStatus_t ret = SUCCESS;
+    switch(param)
+    {
+    case LBS_LED_ID:
+        *len = MIN(*len, lbs_LEDValLen);
+        memcpy(value, lbs_LEDVal, *len);
+        Log_info2("GetParameter : %s returning %d bytes", (uintptr_t)"LED0",
+                  *len);
+        break;
+
+    default:
+        Log_error1("GetParameter: Parameter #%d not valid.", param);
+        ret = INVALIDPARAMETER;
+        break;
+    }
     return(ret);
 }
 
@@ -404,6 +424,9 @@ extern bStatus_t LedButtonService_AddService(uint8_t rspTaskId)
                                          &LB_ServiceCBs);
     Log_info2("Registered service, %d attributes, status 0x%02x",
               GATT_NUM_ATTRS(LB_ServiceAttrTbl), status);
+
+    lbs_icall_rsp_task_id = rspTaskId;
+
     return(status);
 }
 
