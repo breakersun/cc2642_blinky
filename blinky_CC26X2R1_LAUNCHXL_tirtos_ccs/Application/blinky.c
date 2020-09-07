@@ -2086,6 +2086,9 @@ static void ProjectZero_handleButtonPress(pzButtonState_t *pState)
         ButtonService_SetParameter(BS_BUTTON0_ID,
                                    sizeof(pState->state),
                                    &pState->state);
+        LedButtonService_SetParameter(LBS_BUTTON_ID,
+                                      sizeof(pState->state),
+                                      &pState->state);
         break;
     case CONFIG_PIN_BTN2:
         ButtonService_SetParameter(BS_BUTTON1_ID,
