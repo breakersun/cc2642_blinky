@@ -374,6 +374,9 @@ static void ProjectZero_DataService_ValueChangeHandler(
     pzCharacteristicData_t *pCharData);
 static void ProjectZero_DataService_CfgChangeHandler(
     pzCharacteristicData_t *pCharData);
+static void Blinky_LedButtonService_ValueChangeHandler(
+    pzCharacteristicData_t *pCharData);
+
 
 /* Stack or profile callback function */
 static void ProjectZero_advCallback(uint32_t event,
@@ -404,6 +407,11 @@ static void ProjectZero_DataService_CfgChangeCB(uint16_t connHandle,
                                                 uint8_t paramID,
                                                 uint16_t len,
                                                 uint8_t *pValue);
+static void Blinky_LedButtonService_ValueChangeCB(uint16_t connHandle,
+                                                 uint8_t paramID,
+                                                 uint16_t len,
+                                                 uint8_t *pValue);
+
 
 /* Connection handling functions */
 static uint8_t ProjectZero_getConnIndex(uint16_t connHandle);
@@ -486,6 +494,14 @@ static DataServiceCBs_t ProjectZero_Data_ServiceCBs =
     .pfnChangeCb = ProjectZero_DataService_ValueChangeCB,  // Characteristic value change callback handler
     .pfnCfgChangeCb = ProjectZero_DataService_CfgChangeCB, // Noti/ind configuration callback handler
 };
+
+
+static LedButtonServiceCBs_t Blinky_LedButton_ServiceCBs =
+{
+    .pfnChangeCb = Blinky_LedButtonService_ValueChangeCB,  // Characteristic value change callback handler
+    .pfnCfgChangeCb = NULL, // No notification-/indication enabled chars in LED Service
+};
+
 
 // OAD Service callback handler.
 // The type oadTargetCBs_t is defined in oad.h
@@ -656,6 +672,7 @@ static void ProjectZero_init(void)
     LedService_RegisterAppCBs(&ProjectZero_LED_ServiceCBs);
     ButtonService_RegisterAppCBs(&ProjectZero_Button_ServiceCBs);
     DataService_RegisterAppCBs(&ProjectZero_Data_ServiceCBs);
+    LedButtonService_RegisterAppCBs(&Blinky_LedButton_ServiceCBs);
 
     // Placeholder variable for characteristic intialization
     uint8_t initVal[40] = {0};
@@ -1015,6 +1032,9 @@ static void ProjectZero_processApplicationMessage(pzMsg_t *pMsg)
                 break;
             case DATA_SERVICE_SERV_UUID:
                 ProjectZero_DataService_ValueChangeHandler(pCharData);
+                break;
+            case LBS_UUID_SERVICE:
+                Blinky_LedButtonService_ValueChangeHandler(pCharData);
                 break;
           }
           break;
@@ -2133,6 +2153,36 @@ void ProjectZero_LedService_ValueChangeHandler(
     }
 }
 
+void Blinky_LedButtonService_ValueChangeHandler(
+    pzCharacteristicData_t *pCharData)
+{
+    static uint8_t pretty_data_holder[16]; // 5 bytes as hex string "AA:BB:CC:DD:EE"
+    util_arrtohex(pCharData->data, pCharData->dataLen,
+                  pretty_data_holder, sizeof(pretty_data_holder),
+                  UTIL_ARRTOHEX_NO_REVERSE);
+
+    switch(pCharData->paramID)
+    {
+    case LBS_LED_ID:
+        Log_info3("Value Change msg: %s %s: %s",
+                  (uintptr_t)"LED Service",
+                  (uintptr_t)"LED",
+                  (uintptr_t)pretty_data_holder);
+
+        // Do something useful with pCharData->data here
+        // -------------------------
+        // Set the output value equal to the received value. 0 is off, not 0 is on
+        PIN_setOutputValue(ledPinHandle, CONFIG_PIN_RLED, pCharData->data[0]);
+        Log_info2("Turning %s %s",
+                  (uintptr_t)ANSI_COLOR(FG_RED)"LED"ANSI_COLOR(ATTR_RESET),
+                  (uintptr_t)(pCharData->data[0] ? "on" : "off"));
+        break;
+
+    default:
+        return;
+    }
+}
+
 /*
  * @brief   Handle a CCCD (configuration change) write received from a peer
  *          device. This tells us whether the peer device wants us to send
@@ -2439,6 +2489,31 @@ static void ProjectZero_LedService_ValueChangeCB(uint16_t connHandle,
     if(pValChange != NULL)
     {
         pValChange->svcUUID = LED_SERVICE_SERV_UUID;
+        pValChange->paramID = paramID;
+        memcpy(pValChange->data, pValue, len);
+        pValChange->dataLen = len;
+
+        if(ProjectZero_enqueueMsg(PZ_SERVICE_WRITE_EVT, pValChange) != SUCCESS)
+        {
+          ICall_free(pValChange);
+        }
+    }
+}
+
+static void Blinky_LedButtonService_ValueChangeCB(uint16_t connHandle,
+                                                 uint8_t paramID, uint16_t len,
+                                                 uint8_t *pValue)
+{
+    // See the service header file to compare paramID with characteristic.
+    Log_info1("(CB) LedButton Svc Characteristic value change: paramID(%d). "
+              "Sending msg to app.", paramID);
+
+    pzCharacteristicData_t *pValChange =
+        ICall_malloc(sizeof(pzCharacteristicData_t) + len);
+
+    if(pValChange != NULL)
+    {
+        pValChange->svcUUID = LBS_UUID_SERVICE;
         pValChange->paramID = paramID;
         memcpy(pValChange->data, pValue, len);
         pValChange->dataLen = len;
