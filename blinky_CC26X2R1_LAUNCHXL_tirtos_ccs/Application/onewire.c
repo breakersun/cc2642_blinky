@@ -37,6 +37,18 @@ static __inline void delay_ms(uint32_t ms)
     Task_sleep(ms * (1000/Clock_tickPeriod));
 }
 
+static __inline void stop(void)
+{
+    io_set(0);
+}
+
+static __inline void start(void)
+{
+    io_set(1);
+    delay_ms(20);
+    io_set(0);
+    delay_ms(2);
+}
 
 
 
@@ -52,6 +64,8 @@ void OneWire_Init(PIN_Handle pin, PIN_Id pin_id)
 {
     oneWirePinHandle    = pin;
     oneWirePinId        = pin_id;
+
+    stop();
 }
 
 
@@ -65,7 +79,7 @@ void OneWire_Init(PIN_Handle pin, PIN_Id pin_id)
 ************************************************************************************/
 void OneWire_SendByte(uint8_t msg)
 {
-    io_set(msg);
+    start();
 }
 
 
