@@ -95,6 +95,7 @@
 
 #include "led_button_service.h"
 #include "onewire.h"
+#include "AM5BA340X.h"
 
 /*********************************************************************
  * MACROS
@@ -2183,7 +2184,9 @@ void Blinky_LedButtonService_ValueChangeHandler(
                   (uintptr_t)ANSI_COLOR(FG_RED)"LED"ANSI_COLOR(ATTR_RESET),
                   (uintptr_t)(pCharData->data[0] ? "on" : "off"));
 
-        OneWire_SendByte(pCharData->data[0]);
+//        OneWire_SendByte(pCharData->data[0]);
+//        AM5_Play(10);
+        AM5_Loop(10);
         break;
 
     default:
