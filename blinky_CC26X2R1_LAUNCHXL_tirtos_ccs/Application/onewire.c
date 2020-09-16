@@ -92,8 +92,12 @@ void OneWire_Init(PIN_Handle pin, PIN_Id pin_id)
 void OneWire_SendByte(uint8_t msg)
 {
     start();
-    bitbang(1);
-    bitbang(0);
+
+    for (uint8_t i = 0; i < 8; i++)
+    {
+        bitbang(msg & 0x80);
+        msg = msg << 1;
+    }
 }
 
 
