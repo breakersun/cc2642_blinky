@@ -2182,6 +2182,8 @@ void Blinky_LedButtonService_ValueChangeHandler(
         Log_info2("Turning %s %s",
                   (uintptr_t)ANSI_COLOR(FG_RED)"LED"ANSI_COLOR(ATTR_RESET),
                   (uintptr_t)(pCharData->data[0] ? "on" : "off"));
+
+        OneWire_SendByte(pCharData->data[0]);
         break;
 
     default:

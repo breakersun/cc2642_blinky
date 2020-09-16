@@ -65,7 +65,7 @@ void OneWire_Init(PIN_Handle pin, PIN_Id pin_id)
 ************************************************************************************/
 void OneWire_SendByte(uint8_t msg)
 {
-    io_set(1);
+    io_set(msg);
 }
 
 
