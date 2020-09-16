@@ -40,14 +40,26 @@ static __inline void delay_ms(uint32_t ms)
 static __inline void stop(void)
 {
     io_set(0);
+    delay_ms(2);
 }
 
 static __inline void start(void)
 {
     io_set(1);
     delay_ms(20);
-    io_set(0);
-    delay_ms(2);
+    stop();
+}
+
+static __inline void bitbang(bool bit)
+{
+    io_set(1);
+
+    if (bit)
+        delay_ms(5);
+    else
+        delay_ms(2);
+
+    stop();
 }
 
 
@@ -80,6 +92,8 @@ void OneWire_Init(PIN_Handle pin, PIN_Id pin_id)
 void OneWire_SendByte(uint8_t msg)
 {
     start();
+    bitbang(1);
+    bitbang(0);
 }
 
 
