@@ -94,6 +94,7 @@
 #include <util.h>
 
 #include "led_button_service.h"
+#include "onewire.h"
 
 /*********************************************************************
  * MACROS
@@ -580,6 +581,8 @@ static void ProjectZero_init(void)
         Log_error0("Error initializing board LED pins");
         Task_exit();
     }
+
+    OneWire_Init(ledPinHandle, CONFIG_PIN_GLED);
 
     // Open button pins
     buttonPinHandle = PIN_open(&buttonPinState, buttonPinTable);
